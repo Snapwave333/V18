@@ -1,0 +1,33 @@
+p' 
+codec can't encode characters 
+in position 5-84: character 
+maps to <undefined>
+2026-03-10 10:08:33,193 
+[INFO] Cleaning up...
+2026-03-10 10:08:33,298 
+[INFO] Shutdown complete
+
+Loading screen not available
+pygame 2.6.1 (SDL 2.28.4, Python 3.11.9)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+--- Available Audio Devices ---
+  Input Device 0: Microsoft Sound Mapper - Input (Channels: 2, Rate: 44100.0)
+  Input Device 1: Microphone Array (Realtek(R) Au (Channels: 2, Rate: 44100.0)
+  Input Device 2: Microphone (Steam Streaming Mic (Channels: 8, Rate: 44100.0)
+  Input Device 8: Primary Sound Capture Driver (Channels: 2, Rate: 44100.0)
+  Input Device 9: Microphone Array (Realtek(R) Audio) (Channels: 2, Rate: 44100.0)
+  Input Device 10: Microphone (Steam Streaming Microphone) (Channels: 8, Rate: 44100.0)
+  Input Device 20: Microphone Array (Realtek(R) Audio) (Channels: 2, Rate: 48000.0)
+  Input Device 21: Microphone (Steam Streaming Microphone) (Channels: 1, Rate: 44100.0)
+  Input Device 22: Microphone Array (Realtek HD Audio Mic Array input) (Channels: 2, Rate: 44100.0)
+  Input Device 23: Microphone (Realtek HD Audio Mic input) (Channels: 2, Rate: 48000.0)
+  Input Device 26: PC Speaker (Realtek HD Audio 2nd output with SST) (Channels: 2, Rate: 48000.0)
+  Input Device 29: PC Speaker (Realtek HD Audio output with SST) (Channels: 2, Rate: 48000.0)
+  Input Device 30: Stereo Mix (Realtek HD Audio Stereo input) (Channels: 2, Rate: 48000.0)
+  Input Device 32: Microphone (Steam Streaming Microphone Wave) (Channels: 8, Rate: 44100.0)
+  Input Device 34: Input (Steam Streaming Speakers Wave) (Channels: 8, Rate: 44100.0)
+---------------------------
+[AudioThread] AI Agent initialized.
+[STORY] Advancing to Step 2
+[AI] Gemini Error: 404 models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+[AI] Falling back to Ollama (Llama 3)...

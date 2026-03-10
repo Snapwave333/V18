@@ -1,0 +1,35 @@
+A matching Triton is not available, some optimizations will not be enabled
+Traceback (most recent call last):
+  File "C:\Users\chrom\Desktop\Vibes\v18\ollama-vj-engine\python\.venv\Lib\site-packages\xformers\__init__.py", line 55, in _is_triton_available
+    from xformers.triton.softmax import softmax as triton_softmax  # noqa
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrom\Desktop\Vibes\v18\ollama-vj-engine\python\.venv\Lib\site-packages\xformers\triton\softmax.py", line 11, in <module>
+    import triton
+ModuleNotFoundError: No module named 'triton'
+C:\Users\chrom\Desktop\Vibes\v18\ollama-vj-engine\python\.venv\Lib\site-packages\diffusers\utils\outputs.py:63: UserWarning: torch.utils._pytree._register_pytree_node is deprecated. Please use torch.utils._pytree.register_pytree_node instead.
+  torch.utils._pytree._register_pytree_node(
+[DEFORM] Loading runwayml/stable-diffusion-v1-5 + LCM-LoRA img2img pipeline...
+Loading pipeline components...:   0%|          | 0/6 [00:00<?, ?it/s]Loading pipeline components...:  83%|########3 | 5/6 [00:00<00:00, 27.41it/s]Loading pipeline components...: 100%|##########| 6/6 [00:00<00:00, 20.06it/s]
+[DEFORM] Loading TAESD (Tiny VAE)...
+The config attributes {'shift_factor': 0.0, 'upsample_fn': 'nearest'} were passed to AutoencoderTiny, but are not expected and will be ignored. Please verify your config.json configuration file.
+[DEFORM] Loading LCM-LoRA: latent-consistency/lcm-lora-sdv1-5
+C:\Users\chrom\Desktop\Vibes\v18\ollama-vj-engine\python\.venv\Lib\site-packages\diffusers\loaders\lora.py:952: FutureWarning: `fuse_text_encoder_lora` is deprecated and will be removed in version 0.25. You are using an old version of LoRA backend. This will be deprecated in the next releases in favor of PEFT make sure to install the latest PEFT and transformers packages in the future.
+  deprecate("fuse_text_encoder_lora", "0.25", LORA_DEPRECATION_MESSAGE)
+[DEFORM] xformers memory efficient attention enabled.
+[DEFORM] Ready — 448x256 (16:9) img2img feedback loop.
+[DEFORM] Spout not available ('SpoutGL._spoutgl.SpoutSender' object has no attribute 'init') — running without Spout output.
+[DEFORM] Generating seed frame via txt2img...
+  0%|          | 0/4 [00:00<?, ?it/s] 25%|##5       | 1/4 [00:01<00:03,  1.03s/it] 75%|#######5  | 3/4 [00:01<00:00,  3.25it/s]100%|##########| 4/4 [00:01<00:00,  3.34it/s]
+[DEFORM] Seed frame generated.
+[MEMORY] Loaded 672 tokens (655 qualified, saved 2026-03-10 17:23:11).
+[STORY] Loaded 128 exemplars across 16 beats.
+[STORY] Started. Beat 1/8: YOU — The Old Library
+[DEFORM] Periodic reseed (every 80 frames) — injecting fresh scene.
+Token indices sequence length is longer than the specified maximum sequence length for this model (78 > 77). Running this sequence through the model will result in indexing errors
+The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens: ['photography']
+[SCORER] Loading CLIP ViT-B/32 for aesthetic learning...
+[DEFORM] rms=0 beat=N mood=serene story='YOU — The Old Library'
+         prompt='A Quiet and atmospheric, building subtle tension scene: an elderly librarian rea...'
+[SCORER] Aesthetic scorer ready — learning loop active.
+[STORY] Beat 1/8: YOU — The Old Library (3 exemplars)
+[STORY] Context: Faded leather creaks as the elderly librarian settles into a worn armchair, surr...

@@ -1,0 +1,36 @@
+[package]
+name = "rust-vj-backend"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-web = "4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+reqwest = { version = "0.11", features = ["json"] }
+tokio = { version = "1", features = ["full"] }
+actix-files = "0.6"
+rand = "0.8"
+cpal = "0.15"
+rustfft = "6.1"
+anyhow = "1.0"
+glow = "0.13"
+winit = "0.29"
+image = "0.24"
+bytemuck = "1.19"
+glutin = "0.31"
+glutin-winit = "0.4"
+raw-window-handle = "0.5"
+notify = "6.1"
+# For font rendering in ASCII atlas
+font-kit = "0.11"
+pathfinder_geometry = "0.5"
+# For base64 / image conversion
+base64 = "0.21"
+# For logging
+log = "0.4"
+env_logger = "0.10"
+# For colorful console
+colored = "2.0"

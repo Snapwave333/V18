@@ -1,0 +1,7 @@
+data/
+python/.venv/
+.venv/
+__pycache__/
+*.tmp
+node_modules/
+*.pyc

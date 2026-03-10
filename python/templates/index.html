@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <title>V18</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: #0a0a0f;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 1s;
+            transform: none !important;
+            /* Force no zoom */
+        }
+
+        .loading-overlay--hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-title {
+            font-size: 48px;
+            color: #00ffaa;
+            margin-bottom: 30px;
+            font-family: monospace;
+            letter-spacing: 8px;
+        }
+
+        .countdown {
+            font-size: 96px;
+            color: #fff;
+            margin: 20px 0;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        .loading-progress {
+            width: 400px;
+            height: 12px;
+            background: #222;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .loading-progress__bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00ffaa, #3a86ff);
+            width: 0%;
+            transition: width 0.5s;
+        }
+
+        .loading-status {
+            color: #888;
+            font-size: 16px;
+            font-family: monospace;
+        }
+
+        /* Status bar */
+        .status-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: linear-gradient(180deg, rgba(18, 18, 26, 0.95) 0%, transparent 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            z-index: 100;
+        }
+
+        .status-bar__logo {
+            font-weight: bold;
+            color: #00ffaa;
+            font-size: 18px;
+            letter-spacing: 3px;
+            font-family: monospace;
+        }
+
+        .status-bar__indicators {
+            display: flex;
+            gap: 30px;
+            font-size: 14px;
+            color: #888;
+            font-family: monospace;
+        }
+
+        /* Main canvas - ASCII video */
+        #main-canvas {
+            flex: 1;
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- COUNTDOWN SCREEN REMOVED -->
+
+    <!-- STATUS BAR REMOVED PER USER REQUEST -->
+
+    <!-- CANVAS - ASCII VIDEO -->
+    <canvas id="main-canvas"></canvas>
+
+    <script>
+        let showStarted = true;
+        let currentImageData = null;
+
+        const canvas = document.getElementById('main-canvas');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        const FONT_CHARS = ".:-i|=+%O#@*MW";
+
+        const CELL_WIDTH = 5;
+        const CELL_HEIGHT = 10;
+
+        // Character Atlas for ultra-fast rendering
+        const atlas = document.createElement('canvas');
+        const atlasCtx = atlas.getContext('2d');
+        const bufferCanvas = document.createElement('canvas');
+        const bufferCtx = bufferCanvas.getContext('2d', { alpha: false });
+
+        let atlasReady = false;
+        let lastFrameId = null;
+
+        function buildAtlas() {
+            atlas.width = CELL_WIDTH * FONT_CHARS.length;
+            atlas.height = CELL_HEIGHT;
+            atlasCtx.fillStyle = '#000';
+            atlasCtx.fillRect(0, 0, atlas.width, atlas.height);
+            atlasCtx.font = `bold ${CELL_HEIGHT - 1}px monospace`;
+            atlasCtx.textBaseline = 'top';
+            atlasCtx.fillStyle = '#fff';
+
+            for (let i = 0; i < FONT_CHARS.length; i++) {
+                atlasCtx.fillText(FONT_CHARS[i], i * CELL_WIDTH, 0);
+            }
+            atlasReady = true;
+        }
+        buildAtlas();
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            bufferCanvas.width = canvas.width;
+            bufferCanvas.height = canvas.height;
+            bufferCtx.font = `bold ${CELL_HEIGHT - 1}px monospace`;
+            bufferCtx.textBaseline = 'top';
+            lastFrameId = null; // Force redraw
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Render ASCII from pixel data - Optimized with Atlas and Buffer
+        function renderFrame() {
+            if (!showStarted || !currentImageData || !atlasReady) {
+                requestAnimationFrame(renderFrame);
+                return;
+            }
+
+            // Only re-render if frame changed or resized
+            if (currentImageData.frameId !== lastFrameId) {
+                lastFrameId = currentImageData.frameId;
+
+                const cols = Math.floor(bufferCanvas.width / CELL_WIDTH);
+                const rows = Math.floor(bufferCanvas.height / CELL_HEIGHT);
+
+                bufferCtx.fillStyle = '#000';
+                bufferCtx.fillRect(0, 0, bufferCanvas.width, bufferCanvas.height);
+
+                const { data, width, height } = currentImageData;
+
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        const srcX = Math.floor(x * width / cols);
+                        const srcY = Math.floor(y * height / rows);
+                        const idx = (srcY * width + srcX) * 4;
+
+                        let r = data[idx];
+                        let g = data[idx + 1];
+                        let b = data[idx + 2];
+
+                        // v18 Calibration
+                        r = Math.min(255, r * 2.2);
+                        g = Math.min(255, g * 2.2);
+                        b = Math.min(255, b * 2.2);
+
+                        const avg = (r + g + b) / 3;
+                        const charIdx = Math.floor((avg / 255) * (FONT_CHARS.length - 1));
+
+                        // Tinting via drawImage composite (fast)
+                        // For simplicity in JS, we just draw the tinted glyph
+                        // Note: Using a source-in blend for every cell is heavy.
+                        // Optimization: Use globalAlpha or a tiny font cache.
+                        // For now, drawImage from atlas is faster than fillText.
+
+                        // Buttery smooth tinting bypass: use fillStyle but DRAW THE CHAR
+                        bufferCtx.fillStyle = `rgb(${r},${g},${b})`;
+                        bufferCtx.fillText(FONT_CHARS[charIdx], x * CELL_WIDTH, y * CELL_HEIGHT);
+                    }
+                }
+            }
+
+            // Blit buffer to screen (ultra fast)
+            ctx.drawImage(bufferCanvas, 0, 0);
+            requestAnimationFrame(renderFrame);
+        }
+
+        // Continuously fetch new frames - video playback
+        async function fetchVideoFrames() {
+            while (true) {
+                if (showStarted) {
+                    try {
+                        const response = await fetch('/api/frame?_=' + Date.now());
+                        if (response.ok) {
+                            const blob = await response.blob();
+                            const img = new Image();
+
+                            await new Promise((resolve, reject) => {
+                                img.onload = resolve;
+                                img.onerror = reject;
+                                img.src = URL.createObjectURL(blob);
+                            });
+
+                            const tempCanvas = document.createElement('canvas');
+                            tempCanvas.width = 160;
+                            tempCanvas.height = 90;
+                            const tempCtx = tempCanvas.getContext('2d');
+                            tempCtx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+                            const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+                            imageData.frameId = Date.now(); // Mark as new
+
+                            // Garbage Collection: Purge old data and revoke URL
+                            if (currentImageData && currentImageData.objectUrl) {
+                                URL.revokeObjectURL(currentImageData.objectUrl);
+                            }
+
+                            imageData.objectUrl = img.src; // Keep reference to revoke next time
+                            currentImageData = imageData;
+                        } else {
+                            console.error('Frame fetch failed:', response.status);
+                        }
+                    } catch (e) {
+                        console.error('fetchFrame Error:', e);
+                    }
+                }
+
+                await new Promise(r => setTimeout(r, 33)); // ~30fps
+            }
+        }
+
+        // Timer functionality removed
+
+        // Fetch state for BPM
+        async function fetchState() {
+            try {
+                const response = await fetch('/api/vj_state');
+                const data = await response.json();
+
+                if (data.audio_telemetry && data.audio_telemetry.bpm) {
+                    const bpmDisplay = document.getElementById('bpm-display');
+                    if (bpmDisplay) {
+                        bpmDisplay.textContent = Math.round(data.audio_telemetry.bpm);
+                    }
+                }
+            } catch (e) {
+                console.error('State fetch error:', e);
+            }
+            setTimeout(fetchState, 200);
+        }
+
+        // Start
+        fetchState();
+        fetchVideoFrames();
+        requestAnimationFrame(renderFrame);
+    </script>
+</body>
+
+</html>
