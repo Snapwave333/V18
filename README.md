@@ -17,33 +17,16 @@
 
 ## 🎵 What It Does
 
-```text
-[Microphone / System Audio]
-        │
-        ▼
-[AudioIngest — FFT, beat detect, BPM, spectral bands]
-        │
-        ├──► [Susa — AI prompt generator (learns what looks good over time)]
-        │           │
-        │           ▼
-        │    [Storyteller — Dan Harmon narrative arc + Ollama few-shot learning]
-        │
-        ▼
-[ai_worker_deform — SD 1.5 + LCM-LoRA img2img feedback loop]
-   prev_frame → affine_warp(bass/mid/high) → img2img → new_frame
-        │
-        ▼
-[2-Minute Frame Cache Buffer — plays back with 2-min cohesive delay]
-        │
-        ▼
-[ShaderRenderer — ModernGL/GLSL @ 1920×1080]
-   ● Pixel-perfect ASCII glyph mapping (GPU, ~270×152 chars dense)
-   ● Bass-reactive cell size breathing
-   ● Bloom glow  [B]  · Chromatic aberration on beats  [C]  · Scanlines  [L]
-   ● Hue shift, saturation boost, edge glow, FX modes (mirror/quad/kaleido)
-        │
-        ▼
-[OBS Window Capture → 4K upscale output]
+```mermaid
+graph TD
+    Mic[Microphone / System Audio] --> AI["AudioIngest<br>FFT, beat detect, BPM, spectral bands"]
+    AI -->|Audio Data| Susa["Susa<br>AI prompt generator"]
+    Susa -->|Themes & Subjects| Story["Storyteller<br>Dan Harmon narrative arc + Ollama"]
+    AI -->|Beat / Frequencies| Worker["ai_worker_deform<br>SD 1.5 + LCM-LoRA img2img feedback loop<br>prev_frame → affine_warp → img2img → new_frame"]
+    Story -->|Narrative Prompt| Worker
+    Worker --> Cache["2-Minute Frame Cache Buffer<br>plays back with 2-min cohesive delay"]
+    Cache --> Renderer["ShaderRenderer — ModernGL/GLSL @ 1920×1080<br>• Pixel-perfect ASCII glyph mapping<br>• Bass-reactive cell size breathing<br>• Visual FX: Bloom, Chromatic Aberration, Scanlines"]
+    Renderer --> OBS["OBS Window Capture → 4K upscale output"]
 ```
 
 ---
@@ -126,53 +109,54 @@ python main.py --delay 60          # shorter cache delay (default 120s)
 <details>
 <summary><b>Click to View Full Architecture Diagram</b></summary>
 
-```text
-┌─────────────────────────────────────────────────────────────────────┐
-│  main.py  (orchestrator)                                            │
-│  ┌──────────────┐  ┌──────────────────────────────────────────────┐ │
-│  │ AudioIngest  │  │ ai_worker_deform  (subprocess)               │ │
-│  │  sub_bass    │  │  SD 1.5 + LCM-LoRA img2img                  │ │
-│  │  bass        │  │  640×360 (16:9)                              │ │
-│  │  mid         │  │  Deforum-style affine warp                   │ │
-│  │  high        │  │  torch.compile() UNet                        │ │
-│  │  centroid    │  │  AestheticScorer (CLIP async)                │ │
-│  │  beat / BPM  │  │       │ score feedback                       │ │
-│  └──────┬───────┘  └───────┼──────────────────────────────────────┘ │
-│         │ audio_features   │ ML score callback                       │
-│         ▼                  ▼                                         │
-│  ┌────────────────────────────────────────────┐                      │
-│  │ Susa  (prompt AI)                          │                      │
-│  │  _UsageMemory  — time-decay recency        │                      │
-│  │  _ThemeMemory  — thematic drift prevention │                      │
-│  │  PerformanceMemory — CLIP score learning   │ ← persists to disk   │
-│  └────────────────────────────────────────────┘                      │
-│         │ prompt                                                      │
-│         ▼                                                            │
-│  ┌────────────────────────────────────────────┐                      │
-│  │ Storyteller  (Dan Harmon 8-beat narrative) │                      │
-│  │  45s per beat, Ollama LLM descriptions     │                      │
-│  │  Few-shot exemplar learning (disk persist) │ ← learns over time   │
-│  └────────────────────────────────────────────┘                      │
-│                                                                       │
-│  ┌──────────────────────────────────────────────────────────────────┐ │
-│  │ 2-Minute Frame Cache Buffer (deque, 960 frames @ 8fps)           │ │
-│  └──────────────────────────────────────────────────────────────────┘ │
-│                                                                       │
-│  ┌──────────────────────────────────────────────────────────────────┐ │
-│  │ ShaderRenderer  (ModernGL + pygame, 1920×1080)                   │ │
-│  │  GLSL Fragment Shader:                                           │ │
-│  │   • ASCII atlas — GPU texture lookup, 16-density levels         │ │
-│  │   • Neighbour-cell bloom glow           [B to toggle]           │ │
-│  │   • Beat-reactive chromatic aberration  [C to toggle]           │ │
-│  │   • CRT scanlines                       [L to toggle]           │ │
-│  │   • Vignette, crossfade, audio uniforms                        │ │
-│  │   • FX: mirror, quad-split, kaleidoscope                       │ │
-│  └──────────────────────────────────────────────────────────────────┘ │
-│                                                                       │
-│  ┌──────────────────────────────────────────────────────────────────┐ │
-│  │ Optional Spout/Syphon Output for Resolume/MadMapper integration  │ │
-│  └──────────────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Main ["main.py (Orchestrator)"]
+        direction TB
+        
+        Audio["AudioIngest<br>sub_bass, bass, mid, high, centroid, beat / BPM"]
+        
+        subgraph Worker ["ai_worker_deform (Subprocess)"]
+            direction TB
+            W1["SD 1.5 + LCM-LoRA img2img<br>640×360 (16:9)"]
+            W2["Deforum-style affine warp"]
+            W3["torch.compile() UNet"]
+            W4["AestheticScorer (CLIP async)"]
+        end
+        
+        subgraph Susa ["Susa (Prompt AI)"]
+            direction TB
+            S1["_UsageMemory — time-decay recency"]
+            S2["_ThemeMemory — thematic drift prevention"]
+            S3["PerformanceMemory — CLIP score learning"]
+        end
+        
+        subgraph Storyteller ["Storyteller (Dan Harmon Narrative)"]
+            direction TB
+            D1["45s per beat, Ollama LLM descriptions"]
+            D2["Few-shot exemplar learning (disk persist)"]
+        end
+        
+        Buffer["2-Minute Frame Cache Buffer<br>deque, 960 frames @ 8fps"]
+        
+        Renderer["ShaderRenderer (ModernGL + pygame, 1920×1080)<br>• GPU ASCII Atlas Mapping<br>• FX: Bloom, Chromatic Aberration, Scanlines, Vignette<br>• Audio-reactive shader uniforms"]
+        
+        Spout["Optional Spout/Syphon Output<br>Resolume / MadMapper integration"]
+
+        Audio -- "audio_features" --> Susa
+        Susa -- "prompt" --> Storyteller
+        Storyteller -- "narrative prompt" --> Worker
+        Audio -- "audio/beat reactive warp" --> Worker
+        W4 -- "ML score callback" --> S3
+        
+        Worker -- "rendered frames" --> Buffer
+        Buffer --> Renderer
+        Renderer --> Spout
+    end
+    
+    Disk[("(Persistent Disk)")]
+    S3 -. "saves to" .-> Disk
+    D2 -. "saves to" .-> Disk
 ```
 </details>
 
